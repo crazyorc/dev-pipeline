@@ -2,9 +2,6 @@
 
 import sys
 
-import devpipeline.exec.bootstrap
-import devpipeline.exec.build
-import devpipeline.exec.build_order
 import devpipeline.exec.checkout
 import devpipeline.exec.configure
 
@@ -17,9 +14,6 @@ def _do_help():
 
 
 _tools = {
-    "bootstrap": devpipeline.exec.bootstrap.main,
-    "build-order": devpipeline.exec.build_order.main,
-    "build": devpipeline.exec.build.main,
     "checkout": devpipeline.exec.checkout.main,
     "configure": devpipeline.exec.configure.main
 }

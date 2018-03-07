@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dev-pipeline",
+    name="bootstrap",
     version="0.1.0",
     package_dir={
         "": "lib"
@@ -12,12 +12,12 @@ setup(
 
     entry_points={
         "console_scripts": [
-            "dev-pipeline = devpipeline.exec.driver:main"
+            "bootstrap = bootstrap.exec.driver:main"
         ]
     },
 
-    author="Stephen Newell",
-    description="Manage projects spread across multiple repositories",
+    author="Triston Whetten",
+    description="Manage yocto layouts with multiple repositories/layers. Based on dev-pipeline written by Stephen Newell",
     license="BSD-2",
-    url="https://github.com/snewell/dev-pipeline",
+    url="https://github.com/crazyorc/dev-pipeline",
 )
