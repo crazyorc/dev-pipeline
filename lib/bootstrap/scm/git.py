@@ -27,8 +27,7 @@ def _merge_command(match, repo_dir):
                 ],
                 "cwd": repo_dir
             }]
-        else:
-            return None
+        return None
 
     # This will give output similar to this:
     #   master origin/master
@@ -52,13 +51,13 @@ def _merge_command(match, repo_dir):
 
 
 def _ff_command(revision, repo_dir):
-    # If the revision is something weird like master~~^4~14, we want to get
-    # the actual branch so it can be updated.
-    match = re.match(R"([\w\-\.]+)(?:[~^\d]+)?", revision)
-    if match:
-        return _merge_command(match, repo_dir)
-    else:
-        return []
+    if os.path.isdir(repo_dir):
+        # If the revision is something weird like master~~^4~14, we want to get
+        # the actual branch so it can be updated.
+        match = re.match(R"([\w\-\.]+)(?:[~^\d]+)?", revision)
+        if match:
+            return _merge_command(match, repo_dir)
+    return []
 
 
 class Git:
@@ -79,14 +78,13 @@ class Git:
                     repo_dir
                 ]
             }]
-        else:
-            return [{
-                "args": [
-                    'git',
-                    'fetch'
-                ],
-                "cwd": repo_dir
-            }]
+        return [{
+            "args": [
+                'git',
+                'fetch'
+            ],
+            "cwd": repo_dir
+        }]
 
     def update(self, repo_dir):
         """This function updates an existing checkout of source code."""
@@ -100,30 +98,33 @@ class Git:
                 ],
                 "cwd": repo_dir
             }] + _ff_command(rev, repo_dir)
-        else:
-            return None
+        return None
 
 
 _GIT_ARGS = {
+    "uri": None,
+    "revision": None
+}
+
+
+_GIT_ARG_FNS = {
     "uri": lambda v: ("uri", v),
     "revision": lambda v: ("revision", v)
 }
 
 
-def make_git(component, common_wrapper):
+def make_git(current_target, common_wrapper):
     """This function initializes and Git SCM tool object."""
     git_args = {}
 
-    def add_value(v, fn):
-        # pylint: disable=missing-docstring,invalid-name
-        k, r = fn(v)
-        git_args[k] = r
+    def add_value(value, key):
+        args_key, args_value = _GIT_ARG_FNS[key](value)
+        git_args[args_key] = args_value
 
-    devpipeline.toolsupport.args_builder("git", component, _GIT_ARGS,
-                                         add_value)
-
-    if not git_args.get("uri"):
-        # pylint: disable=protected-access
-        raise Exception("Not git uri ({})".format(component._name))
-    else:
+    devpipeline.toolsupport.args_builder(
+        "git", current_target, _GIT_ARGS, add_value)
+    if git_args.get("uri"):
         return common_wrapper(Git(git_args))
+    else:
+        raise Exception("No git uri ({})".format(
+            current_target["current_target"]))

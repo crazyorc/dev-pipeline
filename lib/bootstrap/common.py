@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""Common base classes and functions for the the bootstrap package"""
+
+"""This module defines several base classes that are common for
+the bootstrap utility"""
 
 import argparse
 import errno
@@ -7,13 +9,13 @@ import os
 import re
 import sys
 
-import bootstrap.config
+import bootstrap.config.config
 import bootstrap.executor
 import bootstrap.resolve
 import bootstrap.version
 
 
-class GenericTool:
+class GenericTool(object):
 
     """This is the base class for tools that can be used by boostrap.
 
@@ -34,7 +36,7 @@ class GenericTool:
         self.parser.add_argument(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
-        """Parses arguments and then runs the tool"""
+        """Initializes and runs the tool"""
         args = self.parser.parse_args(*args, **kwargs)
         self.setup(args)
         self.process()
@@ -92,7 +94,7 @@ def _create_target_environment(target):
 
 class TargetTool(GenericTool):
 
-    """This class manages targets"""
+    """A devpipeline tool that executes a list of tasks against a list of targets"""
 
     def __init__(self, tasks=None, executors=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -121,8 +123,7 @@ class TargetTool(GenericTool):
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
-        self.components = bootstrap.config.rebuild_cache(
-            bootstrap.config.find_config())
+        self.components = bootstrap.config.config.update_cache()
         if parsed_args.targets:
             self.targets = parsed_args.targets
         else:
@@ -144,13 +145,20 @@ class TargetTool(GenericTool):
 
     def process_targets(self, build_order):
         """Calls the tasks with the appropriate options for each of the targets"""
+        config_info = {
+            "executor": self.executor
+        }
         for target in build_order:
             self.executor.message("  {}".format(target))
             self.executor.message("-" * (4 + len(target)))
             current = self.components[target]
             env = _create_target_environment(current)
+
+            config_info["current_target"] = target
+            config_info["current_config"] = current
+            config_info["env"] = env
             for task in self.tasks:
-                task(current, name=target, env=env, executor=self.executor)
+                task(config_info)
             self.executor.message("")
 
 

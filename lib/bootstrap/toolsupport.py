@@ -1,28 +1,30 @@
 #!/usr/bin/python3
 """This module has tool helper classes and functions."""
 
-import re
+import devpipeline.config.modifier
 
 
 class SimpleTool():
+    """
+    This class implements a simple tool for the dev-pipeline infrastructure.
+    It handles setting the environment and working with an executor so clients
+    only have to worry about the arguments to the subprocess module.
+    """
 
-    """This class implements a simple tool for the dev-pipeline infrastructure."""
     # pylint: disable=too-few-public-methods
-
-    def __init__(self, executor, name, env, real):
-        self.env = env
-        self.executor = executor
-        self.name = name
+    def __init__(self, current_target, real):
+        self.env = current_target["env"]
+        self.executor = current_target["executor"]
+        self.name = current_target["current_target"]
         self.real = real
-        # print("executor={}".format(executor))
-        # print("name={}".format(name))
-        # print("env={}".format(env))
-        # print("real={}".format(real))
 
     def _call_helper(self, step, helper_fn, *fn_args):
-        common_tool_helper(
-            self.executor, step, self.env,
-            self.name, helper_fn, *fn_args)
+        self.executor.message("{} {}".format(step, self.name))
+        cmds = helper_fn(*fn_args)
+        if cmds:
+            self.executor.execute(self.env, *cmds)
+        else:
+            self.executor.message("\t(Nothing to do)")
 
 
 def tool_builder(component, key, tool_map, *args):
@@ -32,48 +34,59 @@ def tool_builder(component, key, tool_map, *args):
     if tool_name:
         tool_fn = tool_map.get(tool_name)
         if tool_fn:
-            return tool_fn(component, *args)
+            return tool_fn(*args)
         else:
             raise Exception(
-                "Unknown {} '{}' for {}".format(key, tool_name, component._name))
+                "Unknown {} '{}' for {}".format(
+                    key, tool_name, component._name))
     else:
         raise Exception("{} does not specify {}".format(component._name, key))
 
 
-def _args_helper(pattern, component, helper_fn):
-    for key, value in component.items():
-        matches = pattern.match(key)
-        if matches:
-            helper_fn(key, value, matches)
+def args_builder(prefix, current_target, args_dict, value_found_fn):
+    """
+    Process arguments a tool cares about.
+
+    Since most tools require configuration, this function helps deal with the
+    boilerplate.  Each option will be processed based on all modifications
+    supported by dev-pipeline (i.e., profiles and overrides) in the proper
+    order.
+
+    Arguments:
+    prefix -- The prefix for each argument.  This will be applied to
+              everything in args_dict.
+    current_target -- Information about the current target being processed.
+    args_dict -- Something that acts like a dictionary.  The keys should be
+                 options to deal with and the value should be the separtor
+                 value the option requires.
+    value_found_fn -- A function to call when a match is found.
+    """
+    for key, separator in args_dict.items():
+        option = "{}.{}".format(prefix, key)
+        value = devpipeline.config.modifier.modify_everything(
+            current_target["current_config"].get(option), current_target, option, separator)
+        value_found_fn(value, key)
 
 
-def args_builder(prefix, component, args_dict, val_found_fn):
-    """This helper function puts an argument list together."""
-    def call_fn(key, value, matches):
-        # pylint: disable=missing-docstring
-        real_key = key[matches.end():]
-        hit = args_dict.get(real_key)
-        if hit:
-            val_found_fn(value, hit)
+def build_flex_args_keys(components):
+    """
+    Helper function to build a list of options.
 
-    pattern = re.compile(R"^{}\.".format(prefix))
-    _args_helper(pattern, component, call_fn)
+    Some tools require require variations of the same options (e.g., cflags
+    for debug vs release builds), but manually creating those options is
+    cumbersome and error-prone.  This function handles that work by combining
+    all possible comintations of the values in components.
 
-
-def flex_args_builder(prefix, component, args_dict, val_found_fn):
-    # pylint: disable=missing-docstring
-    for key, flex_fn in args_dict.items():
-        pattern = re.compile(R"^{}\.({})\.?".format(prefix, key))
-        _args_helper(pattern, component,
-                     lambda k, v, m, helper=flex_fn:
-                     val_found_fn(v, k[m.end():], helper))
-
-
-def common_tool_helper(executor, step, env, name, helper_fn, *fn_args):
-    # pylint: disable=missing-docstring
-    executor.message("{} {}".format(step, name))
-    cmds = helper_fn(*fn_args)
-    if cmds:
-        executor.execute(env, *cmds)
-    else:
-        executor.message("\t(Nothing to do)")
+    Arguments
+    components -- A list of lists that should be combined to form options.
+    """
+    if len(components) > 1:
+        sub_components = build_flex_args_keys(components[1:])
+        ret = []
+        for first in components[0]:
+            for sub_component in sub_components:
+                ret.append("{}.{}".format(first, sub_component))
+        return ret
+    elif len(components) == 1:
+        return components[0]
+    return []

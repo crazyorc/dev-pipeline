@@ -2,7 +2,7 @@
 """This modules configures the build system - build cache, etc...."""
 
 import bootstrap.common
-import bootstrap.config
+import bootstrap.config.config
 
 
 class Configure(bootstrap.common.GenericTool):
@@ -52,10 +52,12 @@ class Configure(bootstrap.common.GenericTool):
             self.overrides = ""
 
     def process(self):
-        bootstrap.config.write_cache(
-            bootstrap.config.ConfigFinder(self.config),
-            bootstrap.config.ProfileConfig(self.profile),
-            self.overrides, self.build_dir)
+        bootstrap.config.config.process_config(
+            self.config,
+            self.build_dir,
+            "build.cache",
+            profiles=self.profile,
+            overrides=self.overrides)
 
 
 def main(args=None):
