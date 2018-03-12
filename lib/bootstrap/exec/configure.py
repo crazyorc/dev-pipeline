@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 """This modules configures the build system - build cache, etc...."""
 
-import devpipeline.common
-import devpipeline.config
+import bootstrap.common
+import bootstrap.config
 
 
-class Configure(devpipeline.common.GenericTool):
+class Configure(bootstrap.common.GenericTool):
 
     """This class manages the configuration of the project."""
 
     def __init__(self):
-        super().__init__(prog="dev-pipeline configure",
+        super().__init__(prog="bs configure",
                          description="Configure a project")
         self.add_argument("--config", help="Build configuration file",
                           default="build.config")
@@ -52,16 +52,16 @@ class Configure(devpipeline.common.GenericTool):
             self.overrides = ""
 
     def process(self):
-        devpipeline.config.write_cache(
-            devpipeline.config.ConfigFinder(self.config),
-            devpipeline.config.ProfileConfig(self.profile),
+        bootstrap.config.write_cache(
+            bootstrap.config.ConfigFinder(self.config),
+            bootstrap.config.ProfileConfig(self.profile),
             self.overrides, self.build_dir)
 
 
 def main(args=None):
     # pylint: disable=missing-docstring
     configure = Configure()
-    devpipeline.common.execute_tool(configure, args)
+    bootstrap.common.execute_tool(configure, args)
 
 
 if __name__ == '__main__':

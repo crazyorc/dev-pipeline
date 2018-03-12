@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-
-"""This module defines several base classes that are common for
-the dev-pipeline utility"""
+"""Common base classes and functions for the the bootstrap package"""
 
 import argparse
 import errno
@@ -9,15 +7,15 @@ import os
 import re
 import sys
 
-import devpipeline.config
-import devpipeline.executor
-import devpipeline.resolve
-import devpipeline.version
+import bootstrap.config
+import bootstrap.executor
+import bootstrap.resolve
+import bootstrap.version
 
 
-class GenericTool(object):
+class GenericTool:
 
-    """This is the base class for tools that can be used by dev-pipeline.
+    """This is the base class for tools that can be used by boostrap.
 
     In subclasses, override the following as needed:
         execute()
@@ -29,14 +27,14 @@ class GenericTool(object):
             *args, **kwargs)
         self.parser.add_argument("--version", action="version",
                                  version="%(prog)s {}".format(
-                                     devpipeline.version.STRING))
+                                     bootstrap.version.STRING))
 
     def add_argument(self, *args, **kwargs):
         """Subclasses inject additional cli arguments to parse by calling this function"""
         self.parser.add_argument(*args, **kwargs)
 
     def execute(self, *args, **kwargs):
-        """Initializes and runs the tool"""
+        """Parses arguments and then runs the tool"""
         args = self.parser.parse_args(*args, **kwargs)
         self.setup(args)
         self.process()
@@ -51,10 +49,10 @@ class GenericTool(object):
 
 
 _EXECUTOR_TYPES = {
-    "dry-run": devpipeline.executor.DryRunExecutor,
-    "quiet": devpipeline.executor.QuietExecutor,
-    "silent": devpipeline.executor.SilentExecutor,
-    "verbose": devpipeline.executor.VerboseExecutor
+    "dry-run": bootstrap.executor.DryRunExecutor,
+    "quiet": bootstrap.executor.QuietExecutor,
+    "silent": bootstrap.executor.SilentExecutor,
+    "verbose": bootstrap.executor.VerboseExecutor
 }
 
 
@@ -94,7 +92,7 @@ def _create_target_environment(target):
 
 class TargetTool(GenericTool):
 
-    """A devpipeline tool that executes a list of tasks against a list of targets"""
+    """This class manages targets"""
 
     def __init__(self, tasks=None, executors=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,18 +110,19 @@ class TargetTool(GenericTool):
                                    "Regardless of this option, errors are "
                                    "always printed.",
                               default="quiet")
-            self.verbosity = True
-            self.executor = None
             self.components = None
+            self.executor = None
             self.targets = None
+            self.verbosity = True
+
         else:
             self.verbosity = False
 
     def execute(self, *args, **kwargs):
         parsed_args = self.parser.parse_args(*args, **kwargs)
 
-        self.components = devpipeline.config.rebuild_cache(
-            devpipeline.config.find_config())
+        self.components = bootstrap.config.rebuild_cache(
+            bootstrap.config.find_config())
         if parsed_args.targets:
             self.targets = parsed_args.targets
         else:
@@ -139,7 +138,7 @@ class TargetTool(GenericTool):
         self.process()
 
     def process(self):
-        build_order = devpipeline.resolve.order_dependencies(
+        build_order = bootstrap.resolve.order_dependencies(
             self.targets, self.components)
         self.process_targets(build_order)
 
