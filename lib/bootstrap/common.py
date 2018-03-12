@@ -94,7 +94,7 @@ def _create_target_environment(target):
 
 class TargetTool(GenericTool):
 
-    """A devpipeline tool that executes a list of tasks against a list of targets"""
+    """A bootstrap tool that executes a list of tasks against a list of targets"""
 
     def __init__(self, tasks=None, executors=True, *args, **kwargs):
         super().__init__(*args, **kwargs)

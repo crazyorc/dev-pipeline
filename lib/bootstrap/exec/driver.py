@@ -3,8 +3,8 @@
 
 import sys
 
-import devpipeline.exec.checkout
-import devpipeline.exec.configure
+import bootstrap.exec.checkout
+import bootstrap.exec.configure
 
 
 def _do_help():
@@ -15,8 +15,8 @@ def _do_help():
 
 
 _TOOLS = {
-    "checkout": devpipeline.exec.checkout.main,
-    "configure": devpipeline.exec.configure.main
+    "checkout": bootstrap.exec.checkout.main,
+    "configure": bootstrap.exec.configure.main
 }
 
 

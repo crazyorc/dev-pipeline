@@ -2,11 +2,11 @@
 
 """Support modification of option values."""
 
-import devpipeline.config.config
-import devpipeline.config.override
-import devpipeline.config.parser
-import devpipeline.config.paths
-import devpipeline.config.profile
+import bootstrap.config.config
+import bootstrap.config.override
+import bootstrap.config.parser
+import bootstrap.config.paths
+import bootstrap.config.profile
 
 
 def _prepend(separator, old_value, new_value):
@@ -71,7 +71,7 @@ def _apply_profiles(value, current_target, key, separator):
         nonlocal value
         value = modify(value, profile_config, key, separator)
 
-    devpipeline.config.profile.apply_profiles(
+    bootstrap.config.profile.apply_profiles(
         current_target["current_config"], _apply_values)
     return value
 
@@ -82,7 +82,7 @@ def _apply_overrides(value, current_target, key, separator):
         nonlocal value
         value = modify(value, values, key, separator)
 
-    devpipeline.config.override.apply_overrides(
+    bootstrap.config.override.apply_overrides(
         current_target["current_config"],
         current_target["current_target"],
         _apply_values)

@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 """This module implements some helper functions and a simple SCM tool."""
 
-import devpipeline.scm.git
-import devpipeline.toolsupport
+import bootstrap.scm.git
+import bootstrap.toolsupport
 
 # A dictionary of all supported scm tools.  Any supported tool should provide
-# an interface compatible with devpipeline.scm.Scm, but it's not required they
+# an interface compatible with bootstrap.scm.Scm, but it's not required they
 # inherit from that class.  They keys in should match values in the "scm"
 # option in a build.config, and the value should be a function that creates an
 # Scm.
 _SCM_LOOKUP = {
-    "git": devpipeline.scm.git.make_git,
-    "nothing": lambda c, cw: cw(devpipeline.scm.Scm())
+    "git": bootstrap.scm.git.make_git,
+    "nothing": lambda c, cw: cw(bootstrap.scm.Scm())
 }
 
 
@@ -22,11 +22,11 @@ def _make_scm(current_target, common_wrapper):
     Arguments
     component - The component being operated on.
     """
-    return devpipeline.toolsupport.tool_builder(current_target["current_config"], "scm",
-                                                _SCM_LOOKUP, current_target, common_wrapper)
+    return bootstrap.toolsupport.tool_builder(current_target["current_config"], "scm",
+                                              _SCM_LOOKUP, current_target, common_wrapper)
 
 
-class SimpleScm(devpipeline.toolsupport.SimpleTool):
+class SimpleScm(bootstrap.toolsupport.SimpleTool):
 
     """This class is a simple SCM tool."""
 

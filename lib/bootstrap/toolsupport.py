@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """This module has tool helper classes and functions."""
 
-import devpipeline.config.modifier
+import bootstrap.config.modifier
 
 
 class SimpleTool():
@@ -63,7 +63,7 @@ def args_builder(prefix, current_target, args_dict, value_found_fn):
     """
     for key, separator in args_dict.items():
         option = "{}.{}".format(prefix, key)
-        value = devpipeline.config.modifier.modify_everything(
+        value = bootstrap.config.modifier.modify_everything(
             current_target["current_config"].get(option), current_target, option, separator)
         value_found_fn(value, key)
 

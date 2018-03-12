@@ -5,8 +5,8 @@
 import os.path
 import os
 
-import devpipeline.config.parser
-import devpipeline.version
+import bootstrap.config.parser
+import bootstrap.version
 
 
 def split_list(values, token=","):
@@ -73,12 +73,12 @@ def _add_package_options_all(config, state):
 
 def _create_cache(raw_path, cache_dir, cache_file):
     if _is_cache_dir_appropriate(cache_dir, cache_file):
-        config = devpipeline.config.parser.read_config(raw_path)
+        config = bootstrap.config.parser.read_config(raw_path)
         abs_path = os.path.abspath(raw_path)
         root_state = {
             "dp.build_config": abs_path,
             "dp.src_root": os.path.dirname(abs_path),
-            "dp.version": format(devpipeline.version.ID, "02x")
+            "dp.version": format(bootstrap.version.ID, "02x")
         }
         if not os.path.isabs(cache_dir):
             root_state["dp.build_root"] = "{}/{}".format(
@@ -154,7 +154,7 @@ def _raw_updated(config, cache_mtime):
 def _updated_software(config, cache_mtime):
     # pylint: disable=unused-argument
     config_version = config.get("DEFAULT", "dp.version", fallback="0")
-    return devpipeline.version.ID > int(config_version, 16)
+    return bootstrap.version.ID > int(config_version, 16)
 
 
 _OUTDATED_CHECKS = [
@@ -182,7 +182,7 @@ def update_cache(force=False):
              been modified.
     """
     cache_file = find_config()
-    cache_config = devpipeline.config.parser.read_config(cache_file)
+    cache_config = bootstrap.config.parser.read_config(cache_file)
     if force or _is_outdated(cache_file, cache_config):
         return (process_config(
             cache_config.get("DEFAULT", "dp.build_config"),

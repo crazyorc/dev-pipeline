@@ -4,8 +4,8 @@
 
 import os.path
 
-import devpipeline.config.parser
-import devpipeline.config.paths
+import bootstrap.config.parser
+import bootstrap.config.paths
 
 
 def read_all_profiles(path, profile_list, found_fn):
@@ -19,7 +19,7 @@ def read_all_profiles(path, profile_list, found_fn):
     """
     count = 0
     if os.path.isfile(path):
-        parser = devpipeline.config.parser.read_config(path)
+        parser = bootstrap.config.parser.read_config(path)
         for profile in profile_list:
             if parser.has_section(profile):
                 found_fn(profile, parser[profile])
@@ -41,5 +41,5 @@ def apply_profiles(config, found_fn):
     profile_list = config.get("dp.profile_name")
     if profile_list:
         read_all_profiles(
-            devpipeline.config.paths.get_profile_path(),
-            devpipeline.config.config.split_list(profile_list), found_fn)
+            bootstrap.config.paths.get_profile_path(),
+            bootstrap.config.config.split_list(profile_list), found_fn)

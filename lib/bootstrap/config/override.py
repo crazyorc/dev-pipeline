@@ -3,8 +3,8 @@
 import os.path
 import sys
 
-import devpipeline.config.parser
-import devpipeline.config.paths
+import bootstrap.config.parser
+import bootstrap.config.paths
 
 
 def _add_override_values(config, suffix, values):
@@ -23,7 +23,7 @@ _OVERRIDE_VALUES = {
 def read_override(path):
     ret = {}
     if os.path.isfile(path):
-        parser = devpipeline.config.parser.read_config(path)
+        parser = bootstrap.config.parser.read_config(path)
         for section in parser.sections():
             suffix = _OVERRIDE_VALUES.get(section)
             if suffix:
@@ -49,6 +49,6 @@ def apply_overrides(config, name, found_fn):
     override_list = config.get("dp.overrides")
     if override_list:
         read_all_overrides(
-            devpipeline.config.paths.get_overrides_root(),
-            devpipeline.config.config.split_list(override_list),
+            bootstrap.config.paths.get_overrides_root(),
+            bootstrap.config.config.split_list(override_list),
             name, found_fn)

@@ -12,7 +12,7 @@ setup(
 
     entry_points={
         "console_scripts": [
-            "bootstrap = bootstrap.exec.driver:main"
+            "bs = bootstrap.exec.driver:main"
         ]
     },
 
